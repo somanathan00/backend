@@ -1,7 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const Stripe = require('stripe'); // Replace with your test or live key
-const key= "sk_test_51PFzkXSIbQfc6vqHksxoyvw4RTSWRuZgymV6t1fK2KFsEUnDx5yJjgrrmJsvgbaEstUCck8wtuxTtnDxnF1iT7Oj00Cp87DHNJ";
+const key= process.env.key; 
 const stripe=new Stripe(key);
 const app = express();
 // const cors = require('cors');
