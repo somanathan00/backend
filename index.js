@@ -1,39 +1,49 @@
 const express = require('express');
-const bodyParser = require('body-parser');
-const Stripe = require('stripe'); // Replace with your test or live key
-const key= process.env.key; 
-const stripe=new Stripe(key);
+const Stripe = require('stripe');
 const app = express();
-// const cors = require('cors');
 
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY); // Replace with your secret key
 
-// app.use(cors());
 app.use(express.json());
-app.use(express.urlencoded({extended:true }));
+app.use(express.urlencoded({ extended: true }));
 
 app.post('/api/payment', async (req, res) => {
-  const { body } = req;
+  const { email, amount, currency } = req.body;
+
   try {
-    
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: body?.amount,
-      currency:body?.currency,
-     
-    });
-    if (paymentIntent?.status!=='completed'){
-      console.log('==== in')
-      return res.status(200).json({
-        message:"confirm payment",
-        client_secret: paymentIntent?.client_secret 
-      })
+    // Get or create customer based on email
+    let customer = await stripe.customers.list({ email, limit: 1 });
+    if (customer.data.length === 0) {
+      customer = await stripe.customers.create({ email });
+    } else {
+      customer = customer.data[0];
     }
-    return res.status(200).json({ message: "payment completed" });
+
+    // Create a payment intent
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: parseInt(amount),
+      currency: currency,
+      customer: customer.id,
+      setup_future_usage: 'off_session', // To save the payment method for future payments
+    });
+
+    // Create an ephemeral key
+    const ephemeralKey = await stripe.ephemeralKeys.create(
+      { customer: customer.id },
+      { apiVersion: '2022-08-01' }
+    );
+
+    res.status(200).json({
+      paymentIntent: paymentIntent.client_secret,
+      ephemeralKey: ephemeralKey.secret,
+      customer: customer.id,
+    });
   } catch (error) {
     console.error('Error creating payment intent:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: error.message });
   }
 });
 
 app.listen(5050, () => {
-  console.log(`Server running at http://localhost:${5050}`);
+  console.log(`Server running at http://localhost:5050`);
 });
