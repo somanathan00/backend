@@ -8,7 +8,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.post('/api/payment', async (req, res) => {
-  const { email, amount, currency } = req.body;
+  const { email, amount, currency, description } = req.body; // Add description here
 
   try {
     // Get or create customer based on email
@@ -24,6 +24,7 @@ app.post('/api/payment', async (req, res) => {
       amount: parseInt(amount),
       currency: currency,
       customer: customer.id,
+      description: description, // Add description here
       setup_future_usage: 'off_session', // To save the payment method for future payments
     });
 
@@ -47,3 +48,4 @@ app.post('/api/payment', async (req, res) => {
 app.listen(5050, () => {
   console.log(`Server running at http://localhost:5050`);
 });
+
