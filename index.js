@@ -7,6 +7,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY); // Replace with your s
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Endpoint to create a PaymentIntent
 app.post('/api/payment', async (req, res) => {
   const { email, amount, currency, description } = req.body; // Add description here
 
@@ -19,9 +20,9 @@ app.post('/api/payment', async (req, res) => {
       customer = customer.data[0];
     }
 
-    // Create a payment intent
+    // Create a PaymentIntent
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: parseInt(amount),
+      amount: parseInt(amount), // Amount in the smallest currency unit (e.g., cents for USD)
       currency: currency,
       customer: customer.id,
       description: description, // Add description here
